@@ -1,0 +1,200 @@
+
+<?php
+    // connect to database
+    require 'config.php';    
+        
+    $grandtotal = 0;
+    $foodtotal = "";
+        
+    foreach($_SESSION["cart"] as $keys => $values) {
+        $foodID = $values["food_id"];
+        $name = $values["food_name"];
+        $quantity = $values["food_quantity"];
+        $price =  $values["food_price"];
+        $total = ($values["food_quantity"] * $values["food_price"]);
+        $orderDate = date("Y-m-d H:i:s");
+        $customerID = $_SESSION["id"];
+
+        $grandtotal = $grandtotal + $total;
+        $foodtotal .= $name . ', '; 
+    }
+        
+    $foodtotal = trim($foodtotal, ', ');
+
+    //echo $grandtotal;
+    //echo $foodtotal;
+
+
+
+
+    $query = "INSERT INTO orders (grandTotal, orderDate, customerID) VALUES ('$grandtotal', '$orderDate', '$customerID')";
+    $result = $conn->query($query);         
+    if(!$result) {
+?>
+        <div class="container-fluid">
+            <div class="jumbotron">
+                <h1>Something went wrong!</h1>
+                <p>Please try again later.</p>
+            </div>
+        </div>
+<?php
+    }        
+    
+    $query = "SELECT orderID FROM orders";
+    $request = $conn->query($query);
+    if($request->num_rows > 0) {
+        $row = $request->fetch_assoc();
+        $orderID = $row['orderID'];    
+    } else {
+        echo "<h1>No Orders</h1>";
+    }
+
+    $query = "INSERT INTO orderItems (orderID, foodID, quantity) VALUES ('$orderID', '$foodID', '$quantity')";
+    $result = $conn->query($query);  
+    if(!$result) {
+?>
+        <div class="container-fluid">
+            <div class="jumbotron">
+                <h1>Something went wrong!</h1>
+                <p>Please try again later.</p>
+            </div>
+        </div>
+<?php
+        }
+?>
+?>                    
+                    
+                    <!-- Full Name -->
+                    <div class="wrap-input100 validate-input">
+                        <span class="label-input100">Full Name</span>
+                        <input class="input100" type="text" value="<?php if(isset($fullname)) echo $fullname; ?>" name="fullname" autofocus>
+                        <span class="focus-input100"></span>
+                    </div>
+                    <span class="error"><?php echo $fullnameError; ?></span>
+                    <br>
+                    
+                    <!-- Email -->
+                    <div class="wrap-input100 validate-input">
+                        <span class="label-input100">Email</span>
+                        <input class="input100" type="text" value="<?php if(isset($email)) echo $email; ?>" name="email">
+                        <span class="focus-input100"></span>
+                    </div>
+                    <span class="error"><?php echo $emailError; ?></span>
+                    <br>     
+                    
+                    // check full name
+            if(empty($_POST['fullname'])) {
+                $fullnameError = "*Full name is required.<br>";
+            } elseif(!preg_match("/^[a-zA-Z-'\s]+$/", $_POST['fullname'])) {
+                $fullnameError = "*Full name must only contain letters, apostrophes, and hyphens.<br>";
+            } else {
+                $fullname = trim($_POST['fullname']);
+            }
+                    
+                    
+                    // check email
+            if(empty(trim($_POST['email']))) {
+                $emailError = "*Email is required.<br>";
+            } elseif(!filter_var($_POST['email'], FILTER_VALIDATE_EMAIL)) {
+                $emailError = "Invalid email format.<br>";
+            } else {
+                $email = trim($_POST['email']);
+            }
+                    
+                    
+                    
+        <div class="container">
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#myNavbar">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <a class="navbar-brand" href="index.php">Le Cafe'</a>
+            </div>  
+            <div class="collapse navbar-collapse" id="myNavbar">
+                <ul class="nav navbar-nav">
+                    <li class="active" ><a href="index.php">HOME</a></li>
+                    <li><a href="aboutus.php">ABOUT</a></li>
+                </ul>
+            <?php
+                // manager login
+                if(isset($_SESSION['login_user1'])) {
+            ?>
+                <ul class="nav navbar-nav navbar-right">
+                    <li><a href="#"><span class="glyphicon glyphicon-user"></span>Welcome <?php echo $_SESSION['login_user1']; ?> </a></li>
+                    <li><a href="myrestaurant.php">MANAGER CONTROL PANEL</a></li>
+                    <li><a href="logout_m.php">LOG OUT</a></li>
+                </ul>
+            <?php
+                // customer login
+                } else if (isset($_SESSION['login_user2'])) {
+            ?>
+                <ul class="nav navbar-nav navbar-right">
+                    <li><a href="#"><span class="glyphicon glyphicon-user"></span>Welcome <?php echo $_SESSION['login_user2']; ?> </a></li>
+                    <li><a href="foodlist.php"><span class="glyphicon glyphicon-cutlery"></span> Food Zone </a></li>
+                    <li><a href="cart.php"><span class="glyphicon glyphicon-shopping-cart"></span>CART 
+                        (<?php
+                            if(isset($_SESSION["cart"])) {
+                                $count = count($_SESSION["cart"]); 
+                                echo "$count"; 
+                            } else {
+                                echo "0";
+                            }
+                        ?>)
+                    </a></li>
+                    <li><a href="logout_u.php">LOG OUT</a></li>
+                </ul>
+            <?php        
+                } else {
+            ?>
+                <ul class="nav navbar-nav navbar-right">
+                    <li><a href="customer_login.php">LOG IN</span></a></li>
+                </ul>
+            <?php
+                }
+            ?>
+            </div>
+        </div>
+        
+        
+        
+        
+
+    <!-- social media header above fixed navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+        <a class="navbar-brand abs mihoyo" href="https://genshin.mihoyo.com/en/company/about" target="_blank"><img src="images/mihoyo.png" alt="logo"></a>
+        <div class="navbar-collapse collapse" id="collapsingNavbar">
+            <ul class="navbar-nav">
+                <li class="nav-item active">
+                    <a class="nav-link" href="">Link</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="">Link</a>
+                </li>
+            </ul>
+            <ul class="navbar-nav ml-auto">
+                <li class="nav-item">
+                    <a class="nav-link" href="">Link</a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+    
+    
+    <div class="container">
+        <div class="card card-container">
+            <form action="<?php echo htmlspecialchars($_SERVER['PHP_SELF']); ?>" method="post" class="form-signin">
+                <input type="text" name="username" id="username" <?php if(isset($username)) echo "value='$username'"; ?> class="form-control" placeholder="Username" autofocus>
+                <span class="error"><?php echo $usernameError; ?></span>
+                <span class="error"><?php if($usernameError == "" && $passwordError == "") echo $error; ?></span>
+                <input type="password" id="password" class="form-control" placeholder="Password">
+                <span class="error"><?php echo $passwordError; ?></span>
+                <span class="error"><?php echo $confirmError; ?></span>
+                <input type="password" id="confirm" name="confirm" class="form-control" placeholder="Confirm Password">
+                <input type="submit" class="btn btn-lg btn-dark btn-block btn-signin" value="Log In">
+                <p class="link">Already have an account? <a href="customer_login.php">Log In</a></p>
+            </form>
+        </div>
+    </div>
